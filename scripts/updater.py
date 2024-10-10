@@ -1,7 +1,12 @@
+
+
+
 import psycopg2
+import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
+import traceback
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -73,9 +78,21 @@ def scrape_product_data(url):
             price_whole = price_whole_element.text.strip().replace(',', '') if price_whole_element else "0"
             price_fraction = price_fraction_element.text.strip() if price_fraction_element else "00"
 
-            # Concatenate whole and fraction parts to form a complete price
-            price = float(f"{price_whole}.{price_fraction}")
-            print(f"Price extracted: {price}")
+            # Ensure the fractional part is properly formatted (i.e., contains only 2 digits)
+            if len(price_fraction) > 2:
+                price_fraction = price_fraction[:2]  # Limit to 2 digits for safety
+
+            # Safely concatenate the whole and fractional parts to avoid double periods
+            if not price_whole.endswith('.'):
+                price = f"{price_whole}.{price_fraction}"
+            else:
+                price = f"{price_whole}{price_fraction}"
+
+            print(f"Raw Price Found: {price}")
+
+            # Convert the price string to a float
+            price = float(price)
+           print(f"Price extracted: {price}")
 
         except Exception as e:
             print(f"Failed to extract price: {e}")
@@ -100,8 +117,11 @@ def scrape_product_data(url):
             )
             stars_text = stars_element.get_attribute('textContent').strip()
             if stars_text and "out of" in stars_text:
-                stars = float(stars_text.split()[0])
-            print(f"Stars found: {stars}")
+                stars = float(stars_text.split()[0])  # Get the first part before "out of"
+            else:
+                stars = 0.0  # Default to 0.0 if stars cannot be extracted
+    
+           print(f"Stars found: {stars}")
         except Exception as e:
             print(f"Failed to locate stars element: {e}")
             stars = 0.0
