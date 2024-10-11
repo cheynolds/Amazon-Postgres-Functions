@@ -60,10 +60,8 @@ def fetch_all_products(cursor, limit=1000):
     query = """
     SELECT asin, product_link, price, reviews, stars, last_checkdate
     FROM product_data
-    WHERE stars = 0.0
+    WHERE price = 0.0
     ORDER BY last_checkdate ASC NULLS FIRST
-    LIMIT %s
-
     """
     cursor.execute(query, (limit,))
     return cursor.fetchall()
