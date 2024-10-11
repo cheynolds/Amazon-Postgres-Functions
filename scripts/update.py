@@ -301,7 +301,7 @@ def main():
         asin, url, old_price, old_reviews, old_stars, last_check_date = product
     
         # Processing message for each product
-        print(f"\nProcessing product {asin} with last_CheckDate: {last_check_date}")
+        print(f"\nProcessing product {asin} last checked {last_check_date}")
         #print(f"Old stars: {old_stars}")  # Display old stars for reference
 
         # Record the start time for this record
@@ -312,7 +312,7 @@ def main():
 
         # If scraping failed, skip to the next product
         if scraped_data is None:
-            print(f"Skipping product {asin} due to scraping failure.")
+            print(f"Skipping product {asin} due to scraping mismatch.")
             continue  # Skip to the next product
 
         new_price, new_reviews, new_stars = scraped_data
