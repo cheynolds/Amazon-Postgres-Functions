@@ -115,10 +115,15 @@ def scrape_product_data(driver, url, max_retries=3):
 
 
             # Wait for the page to load
-            # try:
-            WebDriverWait(driver, 10).until(
+            try:
+                WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'span.a-price-whole, span#acrCustomerReviewText'))
-            )
+                )
+            except TimeoutException:
+                print(f"Page did not load fully for URL: {url}. Skipping this product.")
+                #return 0.0, 0, 0.0  # Default values on failure
+                return None  # Return None to indicate failure
+                
             # except TimeoutException:
             #     print(f"Page did not load fully for URL: {url}")
             #     driver.quit()
@@ -158,7 +163,7 @@ def scrape_product_data(driver, url, max_retries=3):
 
             except Exception as e:
                print(f"Failed to extract price: {e}")
-               price = 0.0
+               price = None
                time.sleep(5)  # Small delay before retrying to avoid overwhelming the server
 
             # Scrape reviews
@@ -171,7 +176,7 @@ def scrape_product_data(driver, url, max_retries=3):
                 #print(f"Reviews found: {reviews}")
             except TimeoutException:
                 print(f"Failed to locate reviews element: {url}")
-                reviews = 0
+                reviews = None
 
             # Scrape stars
             try:
@@ -184,7 +189,7 @@ def scrape_product_data(driver, url, max_retries=3):
                 #print(f"Stars found: {stars}")
             except TimeoutException:
                 print(f"Failed to locate stars element: {url}")
-                stars = 0.0
+                stars = None
 
             # Close the browser
             #driver.quit()
@@ -194,10 +199,10 @@ def scrape_product_data(driver, url, max_retries=3):
 
         except Exception as e:
             print(f"Failed to scrape data from {url}: {e}")
-            return 0.0, 0, 0.0  # Return default values on error
+            return None  # Return default values on error
     # If retries exceed max_retries, log and return default values
     print(f"Failed to load page after {max_retries} retries for URL: {url}")
-    return 0.0, 0, 0.0  # Return default values on error
+    return None  # Return default values on error
 
 
 
@@ -303,8 +308,14 @@ def main():
         record_start_time = time.time()
 
         # Scrape new data from the Amazon page
-        new_price, new_reviews, new_stars = scrape_product_data(driver, url)
+        scraped_data = scrape_product_data(driver, url)
 
+        # If scraping failed, skip to the next product
+        if scraped_data is None:
+            print(f"Skipping product {asin} due to scraping failure.")
+            continue  # Skip to the next product
+
+        new_price, new_reviews, new_stars = scraped_data
         # Output the scraped data for debugging
         #print(f"Raw Price Found: {new_price}")
         print(f"Price extracted: {new_price}")
