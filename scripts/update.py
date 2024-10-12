@@ -241,7 +241,7 @@ def update_product_in_postgres(cursor, conn, product_data, new_price, new_review
         last_PriceChange_Percent = round(((new_price - old_price) / old_price) * 100, 2) if old_price else 0.0
 
         # Log history if there are changes in price, reviews, or stars
-        if new_price != old_price or new_reviews != old_reviews or new_stars != old_stars:
+        if new_price != old_price or new_reviews != old_reviews or new_stars != old_stars or current_date != old_check_date:
             # Insert old data into history
             cursor.execute(
                 """
@@ -272,10 +272,6 @@ def update_product_in_postgres(cursor, conn, product_data, new_price, new_review
         print(f"Failed to update product {asin}: {e}")
         conn.rollback()
         return None, None
-
-        
-        
-        
 
 def main():
     # Record the overall start time
@@ -340,7 +336,7 @@ def main():
             if last_PriceChange is not None and last_PriceChange_Percent is not None:
                 print(f"Updated product {asin}: price {old_price} -> {new_price}, reviews {old_reviews} -> {new_reviews}, stars {old_stars} -> {new_stars}, price change: {last_PriceChange}, price change percent: {last_PriceChange_Percent}%")
         else:
-            print(f"No changes for product {asin}")
+            print(f"No changes were recorded for product {asin}")
     
         # Calculate time taken for this record
         time_spent = time.time() - record_start_time
@@ -362,49 +358,6 @@ def main():
         time.sleep(random.uniform(2, 5))
 
         
-    # for product in products:
-#         asin, url, old_price, old_reviews, old_stars, last_check_date = product
-#         print(f"Processing product {asin} with last_CheckDate: {last_check_date}")
-#         print(f"Old stars: {old_stars}")  # Check if the old stars are correctly printed
-#         # Record the start time for this record
-#         record_start_time = time.time()
-#
-#         # Scrape new data from the Amazon page
-#         new_price, new_reviews, new_stars = scrape_product_data(driver, url)
-#
-#         # Only update if the price or reviews have valid changes
-#         if new_price != 0.0 or new_reviews != 0:
-#             product_data = {
-#                 'asin': asin,
-#                 'price': old_price,
-#                 'reviews': old_reviews,
-#                 'stars': old_stars,
-#                 'last_checkdate': last_check_date  # Pass the last check date to the function
-#             }
-#
-#             # Update the product in the database with new price, reviews, and stars
-#             update_product_in_postgres(cursor, conn, product_data, new_price, new_reviews, new_stars)
-#
-#         print("\n")
-#         # Calculate time taken for this record
-#         time_spent = time.time() - record_start_time
-#         total_time_spent += time_spent
-#         completed_records += 1
-#
-#         # Estimate remaining time
-#         avg_time_per_record = total_time_spent / completed_records
-#         remaining_records = total_products - completed_records
-#         estimated_time_remaining = avg_time_per_record * remaining_records
-#
-#         # Convert time to a human-readable format
-#         readable_remaining_time = str(timedelta(seconds=estimated_time_remaining))
-#
-#         # Print progress (overwrite the same line with carriage return \r)
-#         print(f"\rProgress: {completed_records}/{total_products}, Estimated Time Remaining: {readable_remaining_time}", end='')
-#
-#         # Add a random delay between 2 and 5 seconds to simulate human behavior and avoid rate limits
-#         time.sleep(random.uniform(2, 5))
-
     # Close connection
     cursor.close()
     conn.close()
